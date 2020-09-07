@@ -8,7 +8,7 @@
 
 ## Resources to create
 
-1. Edit the Python3 code
+1. Edit the Python3 code (in /src/docker/aws-hello-world/src/)
 2. Build the Docker image
 3. Push to ECR Repository
 

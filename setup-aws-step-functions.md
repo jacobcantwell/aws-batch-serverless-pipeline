@@ -1,17 +1,8 @@
 # Setup AWS Step Functions
 
-## Manual Instructions
-
-### Create a compute environment
-
-| Setting | Value |
-| -- | -- |
-| Compute environment type | Managed |
-| Service role | Managed |
-
 ## Resources to create
 
-1. Create AWS Step Function. See /step-functions/step-machine-alpha.asl.json for the state machine configuration.
+1. Create AWS Step Function. (See /src/step-functions/step-machine-alpha.asl.json for the state machine configuration.)
 2. Pass a json object to the Step Machine when invoking the job with the parameters for the job.
 3. Test with Start Execution in the console.
 4. Trigger the Step Function from another Lambda or API Gateway.

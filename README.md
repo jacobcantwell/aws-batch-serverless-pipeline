@@ -1,5 +1,11 @@
 # AWS Batch and AWS Step Functions
 
+## Build Status
+
+This is pre-alpha code, completely untested.
+
+## Summary
+
 This architecture decouples the batch engine and workflow orchestration.
 
 * Workflow creation is defined in JSON and can also integrate with non-AWS Batch applications
@@ -17,7 +23,12 @@ This architecture decouples the batch engine and workflow orchestration.
 ## Sequence
 
 1. [Setup Container Locally](setup-container-locally.md)
-2. [Setup Container Build Pipeline](setup-container-build-pipeline.md)
-3. [Setup AWS Batch](setup-aws-batch.md)
-4. [Setup AWS Step Functions](setup-aws-step-functions.md)
-5. [Setup AWS Lambda Functions](setup-aws-lambda-functions.md)
+2. [Setup AWS Batch](setup-aws-batch.md)
+3. [Setup AWS Step Functions](setup-aws-step-functions.md)
+4. [Setup AWS Lambda Functions](setup-aws-lambda-functions.md)
+
+## TODO
+
+* Example environmental variable from trigger lamdba -> step function -> AWS Batch job
+* Container running in ECS (managed by AWS Batch) needs an IAM role to call other AWS services
+* A first test run
