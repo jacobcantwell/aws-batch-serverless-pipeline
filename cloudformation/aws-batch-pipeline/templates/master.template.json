@@ -1,0 +1,192 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Setup CICD pipeline to build and publish content of Hugo based website from AWS CodeCommit repo to s3 bucket.",
+    "Resources": {
+        "ArtifactBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "AccessControl": "Private",
+                "LifecycleConfiguration": {
+                    "Rules": [
+                        {
+                            "NoncurrentVersionExpirationInDays": 30,
+                            "Status": "Enabled"
+                        }
+                    ]
+                },
+                "VersioningConfiguration": {
+                    "Status": "Enabled"
+                }
+            }
+        },
+        "CodeCommitRepo": {
+            "Type": "AWS::CodeCommit::Repository",
+            "Properties": {
+                "RepositoryDescription": "Repository to host content of the Hugo website",
+                "RepositoryName": {
+                    "Ref": "RepoName"
+                }
+            }
+        },
+        "WebHostingBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "AccessControl": "Private",
+                "BucketName": {
+                    "Ref": "HostingBucketName"
+                },
+                "WebsiteConfiguration": {
+                    "IndexDocument": "index.html",
+                    "ErrorDocument": "404.html"
+                }
+            }
+        },
+        "WebHostingBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "Bucket": {
+                    "Ref": "WebHostingBucket"
+                },
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "s3:GetObject"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:s3:::${WebHostingBucket}/*"
+                            },
+                            "Principal": {
+                                "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity E19N2V737U9HIY"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "IAMRoleStack": {
+            "Type": "AWS::CloudFormation::Stack",
+            "DependsOn": [
+                "ArtifactBucket"
+            ],
+            "Properties": {
+                "TemplateURL": {
+                    "Fn::Sub": "https://${S3BucketName}.s3.amazonaws.com/${S3KeyPrefix}templates/iam.template.json"
+                },
+                "Parameters": {
+                    "WebsiteBucket": {
+                        "Ref": "WebHostingBucket"
+                    },
+                    "ArtifactBucket": {
+                        "Ref": "ArtifactBucket"
+                    }
+                }
+            }
+        },
+        "CodePipelineStack": {
+            "Type": "AWS::CloudFormation::Stack",
+            "DependsOn": [
+                "WebHostingBucket"
+            ],
+            "Properties": {
+                "TemplateURL": {
+                    "Fn::Sub": "https://${S3BucketName}.s3.amazonaws.com/${S3KeyPrefix}templates/pipeline.template.json"
+                },
+                "Parameters": {
+                    "ArtifactBucket": {
+                        "Ref": "ArtifactBucket"
+                    },
+                    "CodePipelineRoleArn": {
+                        "Fn::GetAtt": [
+                            "IAMRoleStack",
+                            "Outputs.CodePipelineRoleArn"
+                        ]
+                    },
+                    "CodeBuildRoleArn": {
+                        "Fn::GetAtt": [
+                            "IAMRoleStack",
+                            "Outputs.CodeBuildRoleArn"
+                        ]
+                    },
+                    "CloudfrontDistId": "!Ref CloudfrontDistId",
+                    "CloudfrontRole": "!Ref CloudfrontRoleArn",
+                    "WebsiteBucket": {
+                        "Ref": "WebHostingBucket"
+                    },
+                    "RepoName": {
+                        "Ref": "RepoName"
+                    },
+                    "RepoBranch": "master"
+                }
+            }
+        }
+    },
+    "Parameters": {
+        "RepoName": {
+            "Description": "Enter the repository name to host hugo website content",
+            "Type": "String",
+            "MinLength": 1,
+            "Default": "com-jacobcantwell-hugo-v1-website-repository"
+        },
+        "HostingBucketName": {
+            "Description": "Name of the S3 bucket to hold the website content (must be globally unique)",
+            "Type": "String",
+            "MinLength": 3,
+            "Default": "com-jacobcantwell-hugo-v1-website-content"
+        },
+        "S3BucketName": {
+            "AllowedPattern": "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$",
+            "ConstraintDescription": "Deployment bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
+            "Default": "com-jacobcantwell-hugo-v1-cloudformation",
+            "Description": "S3 bucket name for the deployment assets. The bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
+            "Type": "String"
+        },
+        "S3KeyPrefix": {
+            "AllowedPattern": "^[0-9a-zA-Z-/]*$",
+            "ConstraintDescription": "Deployment key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Default": "hugo-pipeline/",
+            "Description": "S3 key prefix for the deployment assets. The key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Type": "String"
+        }
+    },
+    "Outputs": {
+        "CodeCommitRepository": {
+            "Description": "AWS CodeCommit repository",
+            "Value": {
+                "Ref": "CodeCommitRepo"
+            }
+        },
+        "WebsiteURL": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "WebHostingBucket",
+                    "WebsiteURL"
+                ]
+            },
+            "Description": "URL for website hosted on S3"
+        },
+        "S3BucketSecureURL": {
+            "Value": {
+                "Fn::Sub": "https://${WebHostingBucket.DomainName}"
+            },
+            "Description": "Name of S3 bucket to hold website content"
+        },
+        "CodePipelineURL": {
+            "Description": "The URL of the created Pipeline",
+            "Value": {
+                "Fn::Sub": [
+                    "https://${AWS::Region}.console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${CodePipelineName}",
+                    {
+                        "CodePipelineName": {
+                            "Fn::GetAtt": [
+                                "CodePipelineStack",
+                                "Outputs.CodePipelineName"
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
