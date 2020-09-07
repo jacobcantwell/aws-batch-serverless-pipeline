@@ -1,4 +1,8 @@
-# AWS Batch
+# Setup Container Locally
+
+## Prerequisites
+
+* Install a working Docker environment - https://www.docker.com/get-started
 
 ## Steps
 

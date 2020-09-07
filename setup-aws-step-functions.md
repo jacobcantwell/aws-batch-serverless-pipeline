@@ -1,4 +1,4 @@
-# AWS Step Functions
+# Setup AWS Step Functions
 
 ## Manual Instructions
 

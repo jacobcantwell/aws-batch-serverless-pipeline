@@ -16,6 +16,8 @@ This architecture decouples the batch engine and workflow orchestration.
 
 ## Sequence
 
-1. [Build Container](setup-container-pipeline.md)
-2. [Setup AWS Batch](setup-aws-batch.md)
-3. [Setup AWS Step Function](setup-aws-batch.md)
+1. [Setup Container Locally](setup-container-locally.md)
+2. [Setup Container Build Pipeline](setup-container-build-pipeline.md)
+3. [Setup AWS Batch](setup-aws-batch.md)
+4. [Setup AWS Step Functions](setup-aws-step-functions.md)
+5. [Setup AWS Lambda Functions](setup-aws-lambda-functions.md)
