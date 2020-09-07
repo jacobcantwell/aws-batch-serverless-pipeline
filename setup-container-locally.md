@@ -8,73 +8,27 @@
 
 ## Resources to create
 
-1. Create IAM user to create ECR repository
-2. Create an Amazon ECR Respository in same region where you create your build environment and run your build
-3. Add policy to AWS CodeBuild service role to allow CodeBuild to upload Docker images to Amazon ECR repositories
-4. Create docker directory and files and upload to S3 or AWS CodeCommit repo. If into S3 zip the files inside the root directory.
-5. Create project in AWS CodeBuild.
-6. Confirm that CodeBuild successfully pushed the Docker image to the repository
+1. Edit the Python3 code
+2. Build the Docker image
+3. Push to ECR Repository
 
-## Build sequence
+### Build the Docker image
 
-1. Commit code to CodeCommit
-2. Produce a docker image as a build output
-3. Push the Docker image to ECS
-
-## Configurations
-
-### Amazon CodeBuild
-
-| Setting | Value |
-| -- | -- |
-| Operating system | Ubuntu |
-| Runtime | Standard |
-| Image | aws/codebuild/standard:4.0 |
-| Privileged | true |
-| AWS_DEFAULT_REGION | [--region-ID--] |
-| AWS_ACCOUNT_ID | [--account-ID--] |
-| IMAGE_TAG | Latest |
-| IMAGE_REPO_NAME | [--Amazon-ECR-repo-name--] |
-
-```AWS CLI
-{
-  "name": "sample-docker-project",
-  "source": {
-    "type": "S3",
-    "location": "codebuild-region-ID-account-ID-input-bucket/DockerSample.zip"
-  },
-  "artifacts": {
-    "type": "NO_ARTIFACTS"
-  },
-  "environment": {
-    "type": "LINUX_CONTAINER",
-    "image": "aws/codebuild/standard:4.0",
-    "computeType": "BUILD_GENERAL1_SMALL",
-    "environmentVariables": [
-      {
-        "name": "AWS_DEFAULT_REGION",
-        "value": "region-ID"
-      },
-      {
-        "name": "AWS_ACCOUNT_ID",
-        "value": "account-ID"
-      },
-      {
-        "name": "IMAGE_REPO_NAME",
-        "value": "Amazon-ECR-repo-name"
-      },
-      {
-        "name": "IMAGE_TAG",
-        "value": "latest"
-      }
-    ],
-    "privilegedMode": true
-  },
-  "serviceRole": "arn:aws:iam::account-ID:role/role-name",
-  "encryptionKey": "arn:aws:kms:region-ID:account-ID:key/key-ID"
-}
+```bash
+docker build -t aws-hello-world .
+docker images
+docker run -t -i -p 80:80 aws-hello-world
 ```
+
+### Push to ECR Repository
+
+Inside the Amazon Container Services, follow these steps to upload your Docker image to an Amazon ECR repository.
+
+* Create an ECR Repository
+* Click in the new repository and click the button 'View push commands'
 
 ## Resources
 
+* [Boto3 Docs](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.put_item)
+* [A Guide to Locally Testing Containers with Amazon ECS Local Endpoints and Docker Compose](https://aws.amazon.com/blogs/compute/a-guide-to-locally-testing-containers-with-amazon-ecs-local-endpoints-and-docker-compose/)
 * [Creating a Simple “Fetch & Run” AWS Batch Job](https://aws.amazon.com/blogs/compute/creating-a-simple-fetch-and-run-aws-batch-job/)
